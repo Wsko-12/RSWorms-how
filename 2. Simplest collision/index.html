@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplest collision</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script type='module'>
+    import drawMap from './map/map.js';
+    const STYLE_SIZE = 512;
+    const MATRIX_SIZE = 512;
+    const [mapCanvas, mapCtx, mapImage] = await drawMap(MATRIX_SIZE);
+
+    const canvas = document.getElementById('canvas');
+
+    canvas.style.width = STYLE_SIZE;
+    canvas.style.height = STYLE_SIZE;
+    canvas.width = MATRIX_SIZE;
+    canvas.height = MATRIX_SIZE;
+
+    const ctx = canvas.getContext('2d');
+
+    // class Entity{
+    //     constructor(){
+    //         this.position = {
+    //             y: 0,
+    //             x:  MATRIX_SIZE / 2,
+    //         }
+    //     }
+
+    //     render(){
+    //         ctx.fillStyle = '#ffc800';
+    //         ctx.beginPath();
+    //         const { x, y } = this.position;
+    //         ctx.arc(x, y, 20, 0, Math.PI * 2);
+    //         ctx.fill();
+    //     }
+
+    //     update(){
+    //         this.position.y += 1;
+    //     }
+    // }
+
+
+    // const entity = new Entity();
+
+
+
+    // function render(){
+    //     // show what if not to clear
+    //     // ctx.drawImage(mapImage, 0, 0);
+    //     // entity.render();
+
+    //     ctx.clearRect(0,0, MATRIX_SIZE, MATRIX_SIZE);
+    //     ctx.drawImage(mapImage, 0, 0);
+    //     entity.render();
+    // }
+    // // render();
+
+    // function update(){
+    //     entity.update();
+    // }
+
+    // const gameLoop = () => {
+    //     render();
+    //     update();
+    //     requestAnimationFrame(gameLoop);
+    // };
+    // gameLoop();
+
+
+
+    const mapImageData = mapCtx.getImageData(0,0, MATRIX_SIZE, MATRIX_SIZE).data;
+
+    const alphaData = []
+    for(let i = 3; i < mapImageData.length; i += 4){
+        alphaData.push(mapImageData[i] === 255 ? 1 : 0);
+    }
+
+    const MAP_MATRIX = [];
+    for(let i = 0; i < MATRIX_SIZE; i ++){
+        const row = alphaData.splice(0, MATRIX_SIZE);
+        MAP_MATRIX.push(row);
+    }
+
+    // visualization
+    // first disable gameLoop();
+    // ctx.drawImage(mapImage, 0, 0);
+    // ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+    // for(let y = 0; y < MATRIX_SIZE; y++){
+    //     for(let x = 0; x < MATRIX_SIZE; x++){
+    //         const value = MAP_MATRIX[y][x];
+    //         if(value === 1){
+    //             ctx.fillRect(x,y,1,1);
+    //         }
+    //     }
+    // }
+
+
+    // tell about y reverse;
+    MAP_MATRIX.reverse();
+    class Entity{
+        constructor(){
+            this.position = {
+                y: MATRIX_SIZE,
+                x:  MATRIX_SIZE / 2,
+            }
+        }
+
+        render(){
+            ctx.fillStyle = '#ffc800';
+            ctx.beginPath();
+            const { x, y } = this.position;
+            ctx.arc(x, MATRIX_SIZE - y, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        update(){
+            if(!this.isCollision()){
+                this.position.y -= 1;
+            }
+        }
+
+        isCollision() {
+            const { x, y } = this.position;
+            const indexX = Math.floor(x);
+            const indexY = Math.floor(y);
+
+            // here check undefined and also 0 values
+            if(!MAP_MATRIX[indexY] || !MAP_MATRIX[indexY][indexX]){
+                return false;
+            }
+            return true;
+        }
+    }
+
+
+    const entity = new Entity();
+
+
+
+    function render(){
+        ctx.clearRect(0,0, MATRIX_SIZE, MATRIX_SIZE);
+        ctx.drawImage(mapImage, 0, 0);
+        entity.render();
+    }
+    // render();
+
+    function update(){
+        entity.update();
+    }
+
+    const gameLoop = () => {
+        render();
+        update();
+        requestAnimationFrame(gameLoop);
+    };
+    gameLoop();
+</script>
+</html>
