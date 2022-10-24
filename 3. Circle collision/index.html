@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplest collision</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script type='module'>
+    import drawMap from './map/map.js';
+    import { Point2, Vector2 } from './math/math.js';
+    const STYLE_SIZE = 512;
+    const MATRIX_SIZE = 512;
+    const [mapCanvas, mapCtx, mapImage] = await drawMap(MATRIX_SIZE);
+
+    const canvas = document.getElementById('canvas');
+
+    canvas.style.width = STYLE_SIZE;
+    canvas.style.height = STYLE_SIZE;
+    canvas.width = MATRIX_SIZE;
+    canvas.height = MATRIX_SIZE;
+
+    const ctx = canvas.getContext('2d');
+
+    const mapImageData = mapCtx.getImageData(0,0, MATRIX_SIZE, MATRIX_SIZE).data;
+
+    const alphaData = []
+    for(let i = 3; i < mapImageData.length; i += 4){
+        alphaData.push(mapImageData[i] === 255 ? 1 : 0);
+    }
+
+    const MAP_MATRIX = [];
+    for(let i = 0; i < MATRIX_SIZE; i ++){
+        const row = alphaData.splice(0, MATRIX_SIZE);
+        MAP_MATRIX.push(row);
+    }
+
+    MAP_MATRIX.reverse();
+    // class Entity{
+    //     constructor(){
+    //         // I.
+    //         this.position = new Point2(MATRIX_SIZE / 2, MATRIX_SIZE);
+    //         this.physics = {
+    //             velocity: new Vector2(0, 0),
+    //             // III.
+    //             g: 0.1,
+    //         }
+    //     }
+
+    //     render(){
+    //         ctx.fillStyle = '#ffc800';
+    //         ctx.beginPath();
+    //         const { x, y } = this.position;
+    //         ctx.arc(x, MATRIX_SIZE - y, 20, 0, Math.PI * 2);
+    //         ctx.fill();
+    //     }
+
+    //     update(){
+    //         const { velocity, g } = this.physics;
+    //         const { position } = this;
+            
+    //         // first try it
+    //         // velocity.y -= g;
+
+    //         if(!this.isCollision()){
+    //             // II.
+    //             velocity.y -= g;
+    //         }else{
+    //             // IV.
+    //             velocity.y = 0;
+    //         }
+
+    //         position.x += velocity.x;
+    //         position.y += velocity.y;
+    //     }
+
+    //     isCollision() {
+    //         const { x, y } = this.position;
+    //         const indexX = Math.floor(x);
+    //         const indexY = Math.floor(y);
+
+    //         // here check undefined and also 0 values
+    //         if(!MAP_MATRIX[indexY] || !MAP_MATRIX[indexY][indexX]){
+    //             return false;
+    //         }
+    //         return true;
+    //     }
+    // }
+
+
+    class Entity{
+        constructor(){
+            this.position = new Point2(MATRIX_SIZE / 2, MATRIX_SIZE);
+            this.radius = 20;
+            this.physics = {
+                velocity: new Vector2(0, 0),
+                g: 0.1,
+            }
+        }
+
+        render(){
+            ctx.fillStyle = '#ffc800';
+            ctx.beginPath();
+            const { x, y } = this.position;
+            const { radius } = this;
+            ctx.arc(x, MATRIX_SIZE - y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            this.position.draw(ctx, MATRIX_SIZE);
+
+            // const angle = 0;
+            // const _x = Math.cos(angle) * radius + x;
+            // const _y = Math.sin(angle) * radius + y;
+
+            // const additionPoint = new Point2(_x, _y);
+            // additionPoint.draw(ctx, MATRIX_SIZE, '#0000FF');
+        }
+
+        update(){
+            const { velocity, g } = this.physics;
+            const { position } = this;
+
+            if(!this.isCollision()){
+                velocity.y -= g;
+            }else{
+                velocity.y = 0;
+            }
+
+            position.x += velocity.x;
+            position.y += velocity.y;
+        }
+
+        isCollision() {
+            const { x, y } = this.position;
+            const indexX = Math.floor(x);
+            const indexY = Math.floor(y);
+
+            const { radius } = this;
+
+            //first try it on render
+            // const angle = 0;
+            // const _x = Math.cos(angle) * radius + x;
+            // const _y = Math.sin(angle) * radius + y;
+
+            // const addPoint = new Point2(_x, _y);
+            // addPoint.draw(ctx, MATRIX_SIZE, '#0000FF');
+            
+            const aroundPoints = [];
+            const step = Math.PI / 10;
+            for(let angle = 0; angle < Math.PI * 2; angle += step){
+                const _x = Math.cos(angle) * radius + x;
+                const _y = Math.sin(angle) * radius + y;
+                const point = new Point2(_x, _y);
+                aroundPoints.push(point);
+            }
+
+            // visualization
+            // at this moment if no render
+            // check that update() calls after render() in gameLoop()
+            // aroundPoints.forEach((point) => point.draw(ctx, MATRIX_SIZE, '#0000FF'));
+            
+            for(let i = 0; i < aroundPoints.length; i++){
+                const point = aroundPoints[i];
+                const indexX = Math.floor(point.x);
+                const indexY = Math.floor(point.y);
+                if(!MAP_MATRIX[indexY] || !MAP_MATRIX[indexY][indexX]){
+                    continue;
+                }
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+
+    const entity = new Entity();
+
+
+
+    function render(){
+        ctx.clearRect(0,0, MATRIX_SIZE, MATRIX_SIZE);
+        ctx.drawImage(mapImage, 0, 0);
+        entity.render();
+    }
+
+    function update(){
+        entity.update();
+    }
+
+    const gameLoop = () => {
+        render();
+        update();
+        requestAnimationFrame(gameLoop);
+    };
+    gameLoop();
+</script>
+</html>
