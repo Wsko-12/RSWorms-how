@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>physics</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script type="module">
+    import {drawCircle, drawLine} from './utils/canvasUtils.js';
+    import {generateMap} from './map/map.js';
+    import {Point2, Vector2} from './math.js';
+    import Loop from './utils/loop.js';
+
+    const MATRIX_SIZE = 512;
+    const STYLE_SIZE = 512;
+
+    const [MAP_MATRIX, MAP_IMAGE] = await generateMap(MATRIX_SIZE);
+    MAP_MATRIX.reverse();
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.backgroundColor = 'lightgray';
+
+    canvas.style.width = STYLE_SIZE + 'px';
+    canvas.style.height = STYLE_SIZE + 'px';
+
+    canvas.width = MATRIX_SIZE;
+    canvas.height = MATRIX_SIZE;
+
+
+    class Entity{
+        constructor(){
+            // this.position = new Point2( 0, 0 );
+            // this.radius = 20;
+            //revert matrix
+
+
+            this.position = new Point2( MATRIX_SIZE / 2, MATRIX_SIZE / 2 );
+            this.radius = 20;
+            this.physics = {
+                velocity: new Vector2(0, 0),
+                g: 0.5,
+                friction: 0.5,
+            }
+        }
+
+        isCollision(vec){
+            // const { x, y } = this.position;
+            // const xIndex = Math.floor(x);
+            // const yIndex = Math.floor(y);
+            
+            // return MAP_MATRIX[yIndex] && MAP_MATRIX[yIndex][xIndex];
+
+
+
+            // const { x, y } = this.position;
+            // const { radius } = this;
+
+            // const pX = Math.cos(0 /* Math.PI */) * radius + x;
+            // const pY = Math.sin(0 /* Math.PI */) * radius + y;
+            // drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, '#0000FF');
+            // return true;
+
+
+
+            // const { x, y } = this.position;
+            // const { radius } = this;
+
+            // for(let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8){
+            //     const pX = Math.cos(angle) * radius + x;
+            //     const pY = Math.sin(angle) * radius + y;
+            //     drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, '#0000FF');
+            // }
+
+            // return true;
+
+            
+            // const { x, y } = this.position;
+            // const { radius } = this;
+
+            // for(let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8){
+            //     const pX = Math.cos(angle) * radius + x;
+            //     const pY = Math.sin(angle) * radius + y;
+            //     const iX = Math.floor(pX);
+            //     const iY = Math.floor(pY);
+
+            //     const pointCollision = MAP_MATRIX[iY] && MAP_MATRIX[iY][iX]
+            //     if(pointCollision){
+            //         return true;
+            //     }
+            // }
+
+            // return false;
+
+
+            // const { x, y } = this.position;
+            // const { radius } = this;
+
+            // const x2 = x + vec.x * 10;
+            // const y2 = y + vec.y * 10;
+            // drawLine(ctx, x, MATRIX_SIZE - y, x2, MATRIX_SIZE - y2);
+            
+            // const angle = Math.atan2(vec.y, vec.x);
+            // const startAngle = angle - Math.PI / 2;
+            // const endAngle = angle + Math.PI / 2;
+            // for(let angle = startAngle; angle < endAngle; angle += Math.PI / 8){
+            //     const pX = Math.cos(angle) * radius + x;
+            //     const pY = Math.sin(angle) * radius + y;
+            //     const iX = Math.floor(pX);
+            //     const iY = Math.floor(pY);
+            //     drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, '#0000FF');
+
+            //     const pointCollision = MAP_MATRIX[iY] && MAP_MATRIX[iY][iX]
+            //     if(pointCollision){
+            //         return true;
+            //     }
+            // }
+
+            // return false;
+
+
+
+
+            const { x, y } = this.position;
+            const { radius } = this;
+
+            const x2 = x + vec.x * 5;
+            const y2 = y + vec.y * 5;
+            // drawLine(ctx, x, MATRIX_SIZE - y, x2, MATRIX_SIZE - y2);
+            
+            const angle = Math.atan2(vec.y, vec.x);
+            const startAngle = angle - Math.PI / 2;
+            const endAngle = angle + Math.PI / 2;
+
+            const collidedPoints = [];
+
+            for(let angle = startAngle; angle < endAngle; angle += Math.PI / 8){
+                const pX = Math.cos(angle) * radius + x;
+                const pY = Math.sin(angle) * radius + y;
+                const iX = Math.floor(pX);
+                const iY = Math.floor(pY);
+
+                const pointCollision = MAP_MATRIX[iY] && MAP_MATRIX[iY][iX]
+                if(pointCollision){
+                    collidedPoints.push(new Point2(pX, pY));
+                }
+            }
+
+            if(!collidedPoints.length){
+                return null;
+            }
+
+            let normaleX = 0;
+            let normaleY = 0;
+            collidedPoints.forEach((point) => {
+                const { x : pointX, y: pointY } = point;
+                normaleX += pointX - x;
+                normaleY += pointY - y;
+                // drawCircle(ctx, pointX, MATRIX_SIZE - pointY, 2, '#0000FF');
+            });
+
+            return new Vector2(normaleX, normaleY);
+        }
+
+        update(){
+            const { velocity, g, friction } = this.physics;
+            velocity.y -= g;
+
+            // {
+            //     // draw velocity
+            //     const clone = velocity.clone().normalize().scale(20);
+            //     const x1 = this.position.x;
+            //     const y1 = this.position.y;
+
+            //     const x2 = this.position.x + clone.x;
+            //     const y2 = this.position.y + clone.y;
+
+            //     drawLine(ctx, x1 , MATRIX_SIZE - y1, x2, MATRIX_SIZE - y2, 'green');
+            // }
+
+            // if(this.isCollision(velocity)){
+            //     // change vel.x to 5
+            //     // velocity.x = velocity.y = 0;
+
+            //     // velocity.scale(0);
+
+            //     // velocity.scale(-1);
+
+            //     // velocity.scale(-1).scale(0.5);
+
+            //     // velocity.scale(-1).scale(friction);
+            // }
+
+            // this.position.x += velocity.x;
+            // this.position.y += velocity.y;
+
+            // return;
+
+
+            const normale = this.isCollision(velocity);
+            if(!normale) {
+                this.position.x += velocity.x;
+                this.position.y += velocity.y;
+                return;
+            }
+
+            // {
+            //     // draw normale
+            //     const clone = normale.clone().normalize().scale(10);
+            //     const x1 = this.position.x;
+            //     const y1 = this.position.y;
+
+            //     const x2 = this.position.x + clone.x;
+            //     const y2 = this.position.y + clone.y;
+
+            //     drawLine(ctx, x1 , MATRIX_SIZE - y1, x2, MATRIX_SIZE - y2, 'blue');
+            // }
+
+
+            const dot = velocity.dotProduct(normale.normalize());
+
+            const reflectedX = velocity.x - 2 * dot * normale.x;
+            const reflectedY = velocity.y - 2 * dot * normale.y;
+
+            const reflectedVector = new Vector2(reflectedX, reflectedY);
+
+            // {
+            //     // draw reflection
+            //     const clone = reflectedVector.clone().normalize().scale(10);
+            //     const x1 = this.position.x;
+            //     const y1 = this.position.y;
+
+            //     const x2 = this.position.x + clone.x;
+            //     const y2 = this.position.y + clone.y;
+
+            //     drawLine(ctx, x1 , MATRIX_SIZE - y1, x2, MATRIX_SIZE - y2, 'red');
+            // }
+
+            const speed = this.physics.velocity.getLength();
+
+            const newVelocity = reflectedVector.normalize().scale(speed).scale(friction);
+
+            if (newVelocity.getLength() < g){
+                newVelocity.x = 0;
+                newVelocity.y = 0;
+            }
+
+            this.physics.velocity = newVelocity;
+
+        }
+
+        render(){
+            const {x, y} = this.position;
+            const { radius } = this;
+            drawCircle(ctx, x, MATRIX_SIZE - y, radius);
+        }
+    }
+
+
+    const entity = new Entity();
+
+
+
+
+    const renderLoop = new Loop(60, () => {
+        ctx.clearRect(0,0,MATRIX_SIZE,MATRIX_SIZE);
+        ctx.drawImage(MAP_IMAGE, 0,0);
+        entity.render();
+    });
+
+    const updateLoop = new Loop(60, () => {
+        entity.update();
+
+    });
+
+
+    let prevTimestamp = 0;
+    const mainLoop = (timestamp = 0) => {
+        const delta = timestamp - prevTimestamp;
+        prevTimestamp = timestamp;
+        renderLoop.play(delta);
+        updateLoop.play(delta);
+
+        requestAnimationFrame(mainLoop);
+    };
+    mainLoop();
+</script>
+</html>

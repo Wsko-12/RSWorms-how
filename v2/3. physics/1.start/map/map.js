@@ -1,5 +1,5 @@
-const SEED = Math.random() * 1000000;
-// const SEED = 11000000;
+// const SEED = Math.random() * 1000000;
+const SEED = 749836.6979432805;
 console.log("seed:", SEED);
 
 export const generateMap = (size = 512) => new Promise(ready => {
