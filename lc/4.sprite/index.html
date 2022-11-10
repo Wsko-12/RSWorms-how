@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+
+<script type="module">
+    import Loop from './loop.js';
+    const canvas = document.getElementById('canvas');
+    canvas.width = 512;
+    canvas.height = 1024;
+    canvas.style.width = 512 + 'px';
+    canvas.style.height = 1024 + 'px';
+    const ctx = canvas.getContext('2d');
+
+    const atlas = {};
+
+    const loadImages = () => new Promise((res) => {
+        const images = ['breath'];
+        let index = -1;
+        const load = () => {
+            index++;
+            if(!images[index]){
+                res(true);
+                return;
+            }
+            const name = images[index];
+            const image = new Image();
+            image.src = `../assets/${name}.png`;
+            image.onload = () => {
+                atlas[name] = image;
+                load();
+            }
+        }
+        load();
+    });
+
+    await loadImages();
+
+    const image = atlas.breath;
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    ctx.drawImage(image, 0,0, width, height);
+
+    const spriteLoop = new Loop(25, () => {
+
+    });
+
+    let prevTimestamp = 0;
+    const mainLoop = (timestamp) => {
+        const delta = timestamp - prevTimestamp;
+        prevTimestamp = timestamp;
+        spriteLoop.play(delta);
+        requestAnimationFrame(mainLoop);
+    }
+
+    mainLoop(0);
+
+</script>
+</html>

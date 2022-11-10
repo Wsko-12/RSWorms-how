@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>physics</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script type="module">
+    import {drawCircle} from './utils/canvasUtils.js';
+    import {generateMap} from './map/map.js';
+    import Loop from './utils/loop.js';
+
+    const MATRIX_SIZE = 512;
+    const STYLE_SIZE = 512;
+
+    const [MAP_MATRIX, MAP_IMAGE] = await generateMap(MATRIX_SIZE);
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.backgroundColor = 'lightgray';
+
+    canvas.style.width = STYLE_SIZE + 'px';
+    canvas.style.height = STYLE_SIZE + 'px';
+
+    canvas.width = MATRIX_SIZE;
+    canvas.height = MATRIX_SIZE;
+
+
+
+
+
+
+
+
+
+
+    const renderLoop = new Loop(60, () => {
+        ctx.clearRect(0,0,MATRIX_SIZE,MATRIX_SIZE);
+        ctx.drawImage(MAP_IMAGE, 0,0);
+    });
+
+    const updateLoop = new Loop(30, () => {
+
+    });
+
+
+    let prevTimestamp = 0;
+    const mainLoop = (timestamp = 0) => {
+        const delta = timestamp - prevTimestamp;
+        prevTimestamp = timestamp;
+        renderLoop.play(delta);
+        updateLoop.play(delta);
+
+        requestAnimationFrame(mainLoop);
+    };
+    mainLoop();
+</script>
+</html>
