@@ -52,7 +52,6 @@
 
     const spriteFrames = height / width;
     let frame = 0;
-
     let direction = 1;
 
     const spriteLoop = new Loop(25, () => {
@@ -68,7 +67,8 @@
         frame += direction;
         if(frame % (spriteFrames - 1) === 0) {
             direction *= -1;
-        }
+        };
+
         ctx.clearRect(0,0,512, 1024);
         ctx.drawImage(image, 0, frame * width, width, width, 0,0, width, width);
     });
