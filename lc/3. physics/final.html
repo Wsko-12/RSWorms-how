@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>physics</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+<script type="module">
+    import {drawCircle, drawLine} from './utils/canvasUtils.js';
+    import {generateMap} from './map/map.js';
+    import Loop from './utils/loop.js';
+    import { Point2, Vector2 } from './utils/geometry.js';
+
+
+    (async function(){
+    const MATRIX_SIZE = 512;
+    const STYLE_SIZE = 512;
+
+    const [MAP_MATRIX, MAP_IMAGE] = await generateMap(MATRIX_SIZE);
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.backgroundColor = 'lightgray';
+
+    canvas.style.width = STYLE_SIZE + 'px';
+    canvas.style.height = STYLE_SIZE + 'px';
+
+    canvas.width = MATRIX_SIZE;
+    canvas.height = MATRIX_SIZE;
+
+    const renderMap = () => {
+        ctx.clearRect(0,0,MATRIX_SIZE,MATRIX_SIZE);
+        ctx.drawImage(MAP_IMAGE, 0,0);
+    }
+
+    const renderLoop = new Loop(45);
+
+    renderLoop.subscribe(renderMap);
+
+    const updateLoop = new Loop(45);
+
+
+    let prevTimestamp = 0;
+    const mainLoop = (timestamp = 0) => {
+        const delta = timestamp - prevTimestamp;
+        prevTimestamp = timestamp;
+        renderLoop.play(delta);
+        updateLoop.play(delta);
+        requestAnimationFrame(mainLoop);
+    };
+    mainLoop();
+
+    {
+        // draw map matrix
+        renderMap();
+        ctx.fillStyle = 'rgba(255, 0,0,0.5)';
+        for(let y = 0; y < MATRIX_SIZE; y++){
+            for(let x = 0; x < MATRIX_SIZE; x++){
+                const value = MAP_MATRIX[y][x];
+                if(value){
+                    ctx.fillRect(x,y,1,1)
+                }
+            }
+        }
+    }
+
+    MAP_MATRIX.reverse();
+    
+    class Entity {
+        constructor(){
+
+            const x = MATRIX_SIZE / 2;
+            const y = MATRIX_SIZE * 0.75;
+            this.position = new Point2(x, y);
+            this.radius = 20;
+
+            this.physics = {
+                velocity: new Vector2(0, 0),
+                g: 0.5,
+                friction: 0.75,
+            }
+
+            renderLoop.subscribe(this.render);
+            updateLoop.subscribe(this.update);
+        }
+
+        checkCollision() {
+            const { x, y } = this.position;
+            const { radius } = this;
+
+            const vel = this.physics.velocity;
+            {
+                // draw velocity vector
+                const clone = vel.clone().normalize().scale(50);
+                const x1 = this.position.x;
+                const y1 = this.position.y;
+
+                const x2 = this.position.x + clone.x;
+                const y2 = this.position.y + clone.y;
+
+                drawLine(ctx, x1 , MATRIX_SIZE - y1, x2, MATRIX_SIZE - y2, 'green');
+            }
+            const vectorAngle = Math.atan2(vel.y, vel.x);
+            const startAngle = vectorAngle - Math.PI / 2;
+            const endAngle = vectorAngle + Math.PI / 2;
+            const step = Math.PI / 8;
+
+            const points = [];
+            for(let angle = startAngle; angle < endAngle; angle += step){
+                const pX = Math.cos(angle) * radius + x;
+                const pY = Math.sin(angle) * radius + y;
+            
+                drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, 'blue');
+
+                const pXIndex = Math.floor(pX);
+                const pYIndex = Math.floor(pY);
+
+                if(MAP_MATRIX[pYIndex] && MAP_MATRIX[pYIndex][pXIndex]){
+                    points.push(new Point2(pX, pY));
+                };
+            }
+
+
+            if(points.length === 0){
+                return false;
+            }
+
+            let normalX = 0;
+            let normalY = 0;
+
+            points.forEach((point) => {
+                const pX = point.x;
+                const pY = point.y;
+
+                const vecX = pX - x;
+                const vecY = pY - y;
+
+                normalX += vecX;
+                normalY += vecY;
+            });
+
+            return new Vector2(normalX, normalY);
+        }
+
+        update = () => {
+            const { velocity, friction, g } = this.physics;
+            velocity.y -= this.physics.g;
+
+            const surfaceNormal = this.checkCollision();
+            if(!surfaceNormal){
+                this.position.x += velocity.x;
+                this.position.y += velocity.y;
+                return;
+            }
+
+            // https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
+            const dot = velocity.dotProduct(surfaceNormal.normalize());
+
+            const reflectedX = velocity.x - 2 * dot * surfaceNormal.x;
+            const reflectedY = velocity.y - 2 * dot * surfaceNormal.y;
+
+            const reflectedVector = new Vector2(reflectedX, reflectedY);
+
+            {
+                // draw reflection vector
+                const clone = reflectedVector.clone().normalize().scale(10);
+                const x1 = this.position.x;
+                const y1 = this.position.y;
+
+                const x2 = this.position.x + clone.x;
+                const y2 = this.position.y + clone.y;
+
+                drawLine(ctx, x1 , MATRIX_SIZE - y1, x2, MATRIX_SIZE - y2, 'red');
+            }
+
+            const speed = velocity.getLength();
+
+            const newVelocity = reflectedVector.normalize().scale(speed).scale(friction);
+
+            if (newVelocity.getLength() < g){
+                newVelocity.x = 0;
+                newVelocity.y = 0;
+            }
+
+            this.physics.velocity = newVelocity;
+        }
+
+        render = () => {
+            const { radius } = this;
+            const { x, y } = this.position;
+
+            drawCircle(ctx, x, MATRIX_SIZE - y, radius, 'rgba(255, 140, 0, 0.75)');
+        }
+    }
+
+    const entity = new Entity();
+
+
+})()
+
+
+
+
+</script>
+</html>
