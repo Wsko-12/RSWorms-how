@@ -4,8 +4,273 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
     <title>Map Generation</title>
 </head>
 <body>
+    <canvas></canvas>
 </body>
+<script>
+    (async function(){
+        const canvas = document.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const MATRIX_SIZE = 128;
+        // const MATRIX_SIZE = 512; // set this size on [3]
+        const CANVAS_SIZE = 512;
+
+        canvas.style.backgroundColor = 'orange';
+
+        canvas.width = canvas.height = MATRIX_SIZE;
+        canvas.style.width = canvas.style.height = CANVAS_SIZE + 'px';
+
+        return;
+
+        // *** [1] setting color and draw rectangle ***
+        ctx.fillStyle = 'lightblue';
+        ctx.fillRect(0,0, MATRIX_SIZE, MATRIX_SIZE);
+
+        return;
+
+        // *** [2] draw simple noise ***
+        canvas.style.imageRendering = 'pixelated';
+
+        for(let x = 0; x < MATRIX_SIZE; x++){
+            for(let y = 0; y < MATRIX_SIZE; y++){
+                const value = Math.random();
+                const color = `rgba(0,0,0, ${value})`;
+                ctx.fillStyle = color;
+                ctx.fillRect(x,y, 1, 1);
+            }
+        }
+
+        return;
+
+
+        // ** draw Perlin noise **
+        // https://p5js.org/reference/#/p5/noise
+    
+        const p5Lib = new p5();
+        p5Lib.remove();
+
+        // const zoom = 50;
+        // const zoom = 150; // set this on [3]
+        
+        const SEED = 10000;
+        p5Lib.noiseSeed(SEED);
+        for(let x = 0; x < MATRIX_SIZE; x++){
+            for(let y = 0; y < MATRIX_SIZE; y++){
+                const value = p5Lib.noise(x, y);
+                // const value = p5Lib.noise(x / zoom, y / zoom);
+
+                const color = `rgba(0,0,0, ${value})`;
+                ctx.fillStyle = color;
+                ctx.fillRect(x,y, 1, 1);
+
+                // ctx.fillStyle = 'black';
+                // if(value > 0.5){
+                //     ctx.fillRect(x,y, 1, 1);
+                // }
+            }
+        }
+
+        return;
+
+
+        const images = ['breath', 'decor', 'grass', 'ground'];
+        const atlas = {};
+        const path = '../assets/';
+        const loadImage = (name) => new Promise((resolve) => {
+            const image = new Image();
+            image.src = path + name + '.png';
+            image.onload = () => {
+                atlas[name] = image;
+                resolve()
+            }
+        })
+
+        await Promise.all(images.map(loadImage));
+
+        // *** [3] fill canvas by Map image ***
+        // const preMatrix = getMatrixFromCtx(ctx) // set this on [4]
+
+        const mapImage = atlas['ground'];
+        const width = mapImage.naturalWidth;
+        const height = mapImage.naturalHeight;
+        for(let x = 0; x < MATRIX_SIZE; x += width){
+            for(let y = 0; y < MATRIX_SIZE; y += height){
+                ctx.drawImage(mapImage, x, y);
+            }
+        }
+
+        return;
+
+
+        // *** [4] crop image by mask ***
+        function getMatrixFromCtx(ctx){
+            imageData = ctx.getImageData(0, 0, MATRIX_SIZE, MATRIX_SIZE);
+            const alphaData = [];
+            for(let i = 3; i < imageData.data.length; i += 4){
+                const value = imageData.data[i];
+                alphaData.push(value === 255 ? 1 : 0);
+            }
+
+            const matrix = [];
+            for(let i = 0; i < MATRIX_SIZE; i++){
+                const row = alphaData.splice(0, MATRIX_SIZE);
+                matrix.push(row); 
+            }
+
+            return matrix;
+        };
+
+
+        for(let y = 0; y < MATRIX_SIZE; y++){
+            for(let x = 0; x < MATRIX_SIZE; x++){
+                const value = preMatrix[y][x];
+                if(value === 0){
+                    ctx.clearRect(x, y, 1, 1);
+                }
+            }
+        }
+
+        return;
+
+
+        // *** [5] draw grass ***
+        const grassImage = atlas['grass'];
+        for(let y = 1; y < MATRIX_SIZE; y++){
+            for(let x = 0; x < MATRIX_SIZE; x++){
+
+                const above = preMatrix[y - 1][x];
+                const value = preMatrix[y][x];
+
+                if(value === 1 && above === 0){
+
+                    ctx.drawImage(grassImage, x, y); 
+
+
+                    // const size = grassImage.naturalWidth;
+                    // const xShifted  = x - size / 2;
+                    // const yShifted = y - size / 2;
+                    // ctx.drawImage(grassImage, xShifted, yShifted); 
+                }
+            }
+        }
+
+        return;
+
+
+        // *** [6] draw objects ***
+        const xRand = Math.random() * MATRIX_SIZE;
+
+        {
+            // draw line
+            ctx.beginPath();
+
+            ctx.save();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+
+            ctx.moveTo(xRand, 0);
+            ctx.lineTo(xRand, MATRIX_SIZE);
+
+            // ctx.lineTo(0, 0);
+            // ctx.lineTo(xRand, 0);
+            // ctx.fillStyle = 'orange';
+            // ctx.fill();
+
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        return;
+
+        class Random{
+            m = 4294967296;
+            a = 1664525;
+            c = 1013904223;
+            constructor(seed) {
+                this.x = seed
+            }
+
+            get(){
+                const {x, m, a, c} = this;
+                this.x = (a * x + c) % m;
+                return this.x / m;
+            }
+        }
+
+        const random = new Random(SEED)
+        const xRand_LCM = Math.floor(random.get() * MATRIX_SIZE);
+
+        // draw line
+        {
+            
+            ctx.beginPath();
+
+            ctx.save();
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+
+            ctx.moveTo(xRand_LCM, 0);
+            ctx.lineTo(xRand_LCM, MATRIX_SIZE);
+
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        const yPlaces = [];
+        for(let y = 1; y < MATRIX_SIZE; y++){
+
+            const above = preMatrix[y-1][xRand_LCM];
+            const value = preMatrix[y][xRand_LCM];
+
+            if(value === 1 && above === 0){
+                yPlaces.push(y);
+            }
+        }
+
+        const drawCircle = (x,y, radius) => {
+            ctx.save();
+            ctx.fillStyle = 'orange';
+            ctx.strokeStyle = 'orange';
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2 );
+            ctx.fill();
+            ctx.restore();
+        }
+
+        yPlaces.forEach(y => {
+            drawCircle(xRand_LCM, y, 10 );
+        });
+
+
+        const { decor } = atlas;
+        const { naturalWidth, naturalHeight } = decor;
+        const x = xRand_LCM - naturalWidth / 2; 
+        const y = yPlaces.at(-1) - naturalHeight;
+
+        ctx.drawImage(decor, x, y);
+
+        return;
+
+        const url = canvas.toDataURL();
+        const mapImageRendered = new Image();
+        mapImage.src = url;
+        mapImage.onload = () => {
+            ctx.drawImage(decor, x, y);
+            ctx.drawImage(mapImage, 0, 0);
+        }
+
+    })()
+
+
+
+
+
+
+
+
+</script>
 </html>
