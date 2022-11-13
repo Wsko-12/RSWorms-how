@@ -11,7 +11,9 @@
 </body>
 <script type="module">
     import {drawCircle} from './utils/canvasUtils.js';
-    const MATRIX_SIZE = 512;
+
+    (async function(){
+        const MATRIX_SIZE = 512;
     const STYLE_SIZE = 512;
 
     const canvas = document.getElementById('canvas');
@@ -26,6 +28,250 @@
     canvas.height = MATRIX_SIZE;
 
     drawCircle(ctx, MATRIX_SIZE / 2, 30, 30);
+
+    return;
+    
+    // ** [1] use object **
+    class Ball {
+        x = MATRIX_SIZE / 2;
+        y = 30;
+        radius = 30;
+
+        render = (ctx) => {
+            this.y += 1; // use on line [3]
+            const {x, y, radius} = this;
+            drawCircle(ctx, x, y, radius);
+        }
+    }
+
+    const ball = new Ball();
+    ball.render(ctx)
+
+    return;
+
+
+    // ** [2] use render loop **
+    {
+        const render = () => {
+        ball.render(ctx);
+        requestAnimationFrame(render);
+        }
+        render();
+    }
+
+
+    return;
+
+
+    // ** [3] update ball position
+    {
+        const render = () => {
+            ctx.clearRect(0, 0, MATRIX_SIZE, MATRIX_SIZE);
+            ball.render(ctx);
+            requestAnimationFrame(render);
+        }
+        render();
+    }
+
+    return;
+
+
+    // ** [4] FPS
+
+    {
+        let frame = 0;
+        const render = () => {
+            frame++;
+            ctx.clearRect(0, 0, MATRIX_SIZE, MATRIX_SIZE);
+            ball.render(ctx);
+            requestAnimationFrame(render);
+        }
+        render();
+
+        setInterval(() => {
+            console.log(frame);
+            frame = 0;
+        }, 1000);
+    }
+
+
+    return;
+
+
+    // ** [5] Fixed FPS
+    class Loop {
+        constructor(fps, callback) {
+            this.oneFrameMs = 1000 / fps;
+            this.callback = callback;
+            this.msCounter = 0;
+        }
+
+        play(delta) {
+            this.msCounter += delta;
+            if(this.msCounter > this.oneFrameMs){
+                this.callback();
+                this.msCounter = this.msCounter % this.oneFrameMs;
+            }
+        }
+    }
+
+    {
+        let frame = 0;
+
+        const renderLoop = new Loop(30, () => {
+            frame++;
+            ctx.clearRect(0, 0, MATRIX_SIZE, MATRIX_SIZE);
+            ball.render(ctx);
+        });
+
+
+        let prevTimestamp = 0;
+        const mainLoop = (/* timestamp */) => {
+            const now = Date.now();
+            const delta = now - prevTimestamp;
+            prevTimestamp = now;
+
+            renderLoop.play(delta);
+            requestAnimationFrame(mainLoop);
+
+            // const delta = timestamp - prevTimestamp;
+            // prevTimestamp = timestamp;
+
+            // renderLoop.play(delta);
+            // requestAnimationFrame(mainLoop);
+
+        }
+        mainLoop(0);
+
+        setInterval(() => {
+            console.log(frame);
+            frame = 0;
+        }, 1000);
+    }
+
+    return;
+
+
+    // ** [6] decompose update and render
+    {
+        class Ball {
+            x = MATRIX_SIZE / 2;
+            y = 30;
+            radius = 30;
+
+            update = () => {
+                this.y += 1;
+            }
+
+            render = (ctx) => {
+                const {x, y, radius} = this;
+                drawCircle(ctx, x, y, radius);
+            }
+        }
+
+        const ball = new Ball();
+
+        const renderLoop = new Loop(30, () => {
+            ctx.clearRect(0, 0, MATRIX_SIZE, MATRIX_SIZE);
+            ball.render(ctx);
+        });
+
+        const updateLoop = new Loop(30, () => {
+            ball.update();
+        });
+
+        let prevTimestamp = 0;
+        const mainLoop = (timestamp) => {
+            const delta = timestamp - prevTimestamp;
+            prevTimestamp = timestamp;
+
+            renderLoop.play(delta);
+            updateLoop.play(delta);
+
+            requestAnimationFrame(mainLoop);
+        }
+        mainLoop(0);
+    }
+
+    return;
+
+    // ** [7] Sprite animations
+
+   
+    const images = ['breath', 'aiming'];
+    const atlas = {};
+    const path = '../assets/';
+    const loadImage = (name) => new Promise((resolve) => {
+        const image = new Image();
+        image.src = path + name + '.png';
+        image.onload = () => {
+            atlas[name] = image;
+            resolve()
+        }
+    })
+
+    await Promise.all(images.map(loadImage));
+
+    const wormImage = atlas['breath'];
+    
+    const width = wormImage.naturalWidth;
+    const height = wormImage.naturalHeight;
+
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(wormImage, 0, 0);
+
+    return;
+
+
+
+
+    let frame = 0;
+    let direction = 1;
+    const spriteLoop = new Loop(25, () => {
+        frame++;
+        ctx.clearRect(0,0, width, height);
+        ctx.drawImage(wormImage, 0, -frame);
+
+        // frame++;
+        // ctx.clearRect(0,0, width, height);
+        // ctx.drawImage(wormImage, 0, frame, width, width, 0, 0, width, width);
+
+        // frame++;
+        // const spriteFrames = height / width;
+        // frame = frame % spriteFrames;
+        // ctx.clearRect(0,0, width, height);
+        // ctx.drawImage(wormImage, 0, frame * width, width, width, 0, 0, width, width);
+
+
+        // frame += direction;
+        // const spriteFrames = height / width;
+        // if(frame % (spriteFrames - 1) === 0) {
+        //     direction *= -1;
+        // };
+
+        // ctx.clearRect(0,0, width, height);
+        // ctx.drawImage(wormImage, 0, frame * width, width, width, 0, 0, width, width);
+    });
+
+    let prevTimestamp = 0;
+    const mainLoop = (timestamp) => {
+        const delta = timestamp - prevTimestamp;
+        prevTimestamp = timestamp;
+        spriteLoop.play(delta);
+        requestAnimationFrame(mainLoop);
+    }
+    mainLoop(0);
+
+    })()
+
+
+
+
 
 </script>
 </html>
