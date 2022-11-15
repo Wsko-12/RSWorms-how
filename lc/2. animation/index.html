@@ -38,7 +38,7 @@
         radius = 30;
 
         render = (ctx) => {
-            // this.y += 1; // use on line [3]
+            this.y += 1;
             const {x, y, radius} = this;
             drawCircle(ctx, x, y, radius);
         }
@@ -53,8 +53,8 @@
     // ** [2] use render loop **
     {
         const render = () => {
-        ball.render(ctx);
-        requestAnimationFrame(render);
+            ball.render(ctx);
+            requestAnimationFrame(render);
         }
         render();
     }
@@ -63,7 +63,7 @@
     return;
 
 
-    // ** [3] update ball position
+    // ** [3] clear canvas each frame position
     {
         const render = () => {
             ctx.clearRect(0, 0, MATRIX_SIZE, MATRIX_SIZE);

@@ -15,7 +15,7 @@
         const canvas = document.querySelector('canvas');
         const ctx = canvas.getContext('2d');
 
-        const MATRIX_SIZE = 128;
+        const MATRIX_SIZE = 16;
         // const MATRIX_SIZE = 512; // set this size on [3]
         const CANVAS_SIZE = 512;
 
@@ -33,7 +33,7 @@
         return;
 
         // *** [2] draw simple noise ***
-        canvas.style.imageRendering = 'pixelated';
+        // canvas.style.imageRendering = 'pixelated';
 
         for(let x = 0; x < MATRIX_SIZE; x++){
             for(let y = 0; y < MATRIX_SIZE; y++){
@@ -105,6 +105,16 @@
         }
 
         return;
+
+        {
+            // draw in console
+
+            // MATRIX_SIZE = 32;
+            // zoom = 20;
+            // alphaData.push(value === 255 ? '◼' : '◻');
+            // console.log(preMatrix);
+
+        }
 
 
         // *** [4] crop image by mask ***
@@ -181,7 +191,7 @@
             // ctx.fillStyle = 'orange';
             // ctx.fill();
 
-            ctx.stroke();
+            // ctx.stroke();
             ctx.restore();
         }
 
@@ -221,6 +231,7 @@
             ctx.restore();
         }
 
+        return;
         const yPlaces = [];
         for(let y = 1; y < MATRIX_SIZE; y++){
 
@@ -235,7 +246,6 @@
         const drawCircle = (x,y, radius) => {
             ctx.save();
             ctx.fillStyle = 'orange';
-            ctx.strokeStyle = 'orange';
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, Math.PI * 2 );
             ctx.fill();
@@ -246,7 +256,7 @@
             drawCircle(xRand_LCM, y, 10 );
         });
 
-
+        return;
         const { decor } = atlas;
         const { naturalWidth, naturalHeight } = decor;
         const x = xRand_LCM - naturalWidth / 2; 

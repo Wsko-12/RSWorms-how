@@ -97,11 +97,11 @@
             }
         }
 
-        // const entity = new Entity();
+        const entity = new Entity();
     }
 
 
-    // return;
+    return;
 
     // ** [2] use geometry units
 
@@ -115,8 +115,8 @@
                 this.radius = 25;
 
                 this.physics = {
-                    velocity: new Vector2(0, 0),
-                    g: 0.5,
+                    velocity: new Vector2(0, 1),
+                    // g: 0.5,
                 }
 
                 renderLoop.subscribe(this.render);
@@ -127,7 +127,7 @@
                 // this.y += 1;
 
                 const { velocity } = this.physics;
-                velocity.y += this.physics.g;
+                // velocity.y += this.physics.g;
 
                 this.position.x += velocity.x;
                 this.position.y += velocity.y;
@@ -142,10 +142,10 @@
             }
         }
 
-        // const entity = new Entity();
+        const entity = new Entity();
     }
 
-    // return;
+    return;
 
     // ** [3] don't use canvas coordinate system
 
@@ -187,10 +187,10 @@
             }
         }
 
-        // const entity = new Entity();
+        const entity = new Entity();
     }
 
-    // return;
+    return;
 
     // ** [4] simple collision
 
@@ -213,15 +213,6 @@
 
                 renderLoop.subscribe(this.render);
                 updateLoop.subscribe(this.update);
-            }
-
-            checkCollision() {
-                // return true;
-
-                const { x, y } = this.position;
-                const xIndex = Math.floor(x);
-                const yIndex = Math.floor(y);
-                return MAP_MATRIX[yIndex] && MAP_MATRIX[yIndex][xIndex];
             }
 
             update = () => {
@@ -251,6 +242,15 @@
                 this.position.y += velocity.y;
             }
 
+            checkCollision() {
+                return false;
+
+                const { x, y } = this.position;
+                const xIndex = Math.floor(x);
+                const yIndex = Math.floor(y);
+                return MAP_MATRIX[yIndex] && MAP_MATRIX[yIndex][xIndex];
+            }
+
             render = () => {
                 const { radius } = this;
                 const { x, y } = this.position;
@@ -272,7 +272,7 @@
             constructor(){
 
                 const x = MATRIX_SIZE / 2;
-                const y = MATRIX_SIZE * 0.75;
+                const y = MATRIX_SIZE / 2;
                 this.position = new Point2(x, y);
                 this.radius = 20;
 
@@ -292,7 +292,7 @@
 
                 return true;
 
-                // const angle = Math.PI / 2;
+                // const angle = 0;
                 // const pX = Math.cos(angle) * radius + x;
                 // const pY = Math.sin(angle) * radius + y;
                 
@@ -331,7 +331,7 @@
 
                 // const vel = this.physics.velocity;
                 // const vectorAngle = Math.atan2(vel.y, vel.x);
-                // const startAngle = vectorAngle - Math.PI / 2;
+                // const startAngle = vectorAngle - Math.PI / 2 /* + step */;
                 // const endAngle = vectorAngle + Math.PI / 2;
                 // const step = Math.PI / 8;
 
@@ -382,7 +382,7 @@
                 //     };
                 // }
                 
-                // return points.length;
+
 
                 // if(points.length === 0){
                 //     return false;
@@ -467,9 +467,20 @@
 
                 drawCircle(ctx, x, MATRIX_SIZE - y, radius, 'rgba(255, 140, 0, 0.75)');
             }
+
+            push(x, y) {
+                const { velocity } = this.physics;
+                velocity.x += x;
+                velocity.y += y;
+            }
         }
 
         const entity = new Entity();
+        document.addEventListener('keydown', (e) => {
+            if(e.code === 'KeyJ'){
+                entity.push(0, 15)
+            }
+        }) 
     }
 
     })()
