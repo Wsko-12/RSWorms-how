@@ -78,6 +78,31 @@
 
     // ** [4] FPS
 
+    // ! BAD PRACTICE 
+    {
+        const FPS = 500;
+        let frame = 0;
+
+        function update() {
+            frame++
+            setTimeout(update, 1000 / FPS);
+            // setTimeout(update, 0);
+        }
+        update()
+
+        // setInterval(() => {
+        //     frame++
+        // }, 0)
+
+        setInterval(() => {
+            console.log(frame)
+            frame = 0
+        }, 1000)
+
+    }
+
+    return;
+
     {
         let frame = 0;
         const render = () => {
