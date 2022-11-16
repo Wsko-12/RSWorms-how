@@ -15,6 +15,8 @@
     import {generateMap} from './map/map.js';
     import Loop from './utils/loop.js';
     import { Point2, Vector2 } from './utils/geometry.js';
+    
+    const SHOW_HELPERS = true;
 
 
     (async function(){
@@ -91,11 +93,12 @@
         }
 
         checkCollision() {
-            const { x, y } = this.position;
+            let { x, y } = this.position;
             const { radius } = this;
 
             const vel = this.physics.velocity;
-            {
+
+            if(SHOW_HELPERS){
                 // draw velocity vector
                 const clone = vel.clone().normalize().scale(50);
                 const x1 = this.position.x;
@@ -116,7 +119,7 @@
                 const pX = Math.cos(angle) * radius + x;
                 const pY = Math.sin(angle) * radius + y;
             
-                drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, 'blue');
+                SHOW_HELPERS && drawCircle(ctx, pX, MATRIX_SIZE - pY, 2, 'blue');
 
                 const pXIndex = Math.floor(pX);
                 const pYIndex = Math.floor(pY);
@@ -167,7 +170,7 @@
 
             const reflectedVector = new Vector2(reflectedX, reflectedY);
 
-            {
+            if(SHOW_HELPERS){
                 // draw reflection vector
                 const clone = reflectedVector.clone().normalize().scale(10);
                 const x1 = this.position.x;
@@ -183,7 +186,7 @@
 
             const newVelocity = reflectedVector.normalize().scale(speed).scale(friction);
 
-            if (newVelocity.getLength() < g){
+            if (newVelocity.getLength() < g * 1.2){
                 newVelocity.x = 0;
                 newVelocity.y = 0;
             }
