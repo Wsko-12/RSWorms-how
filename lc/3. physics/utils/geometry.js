@@ -30,8 +30,8 @@ export class Vector2 {
 
     normalize(){
         const length = this.getLength();
-        this.x = this.x / length;
-        this.y = this.y / length;
+        this.x /= length;
+        this.y /= length;
         return this;
     }
 

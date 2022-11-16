@@ -197,9 +197,20 @@
 
             drawCircle(ctx, x, MATRIX_SIZE - y, radius, 'rgba(255, 140, 0, 0.75)');
         }
+
+        push(x, y) {
+                const { velocity } = this.physics;
+                velocity.x += x;
+                velocity.y += y;
+        }
     }
 
     const entity = new Entity();
+    document.addEventListener('keydown', (e) => {
+        if(e.code === 'KeyJ'){
+            entity.push(0, 15);
+        };
+    });
 
 
 })()
