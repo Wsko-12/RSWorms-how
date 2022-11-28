@@ -12,72 +12,116 @@
 </body>
 <script>
     (async function(){
+        // setup canvas
         const canvas = document.querySelector('canvas');
         const ctx = canvas.getContext('2d');
 
-        const MATRIX_SIZE = 16;
-        // const MATRIX_SIZE = 512; // set this size on [3]
+        const MATRIX_SIZE = 128;
+
+        // ** [3.2] **
+        // const MATRIX_SIZE = 512; // set this size on step [3]
+
         const CANVAS_SIZE = 512;
 
-        canvas.style.backgroundColor = 'orange';
+        // comment this line to go further
+        // canvas.style.backgroundColor = 'orange';
 
         canvas.width = canvas.height = MATRIX_SIZE;
         canvas.style.width = canvas.style.height = CANVAS_SIZE + 'px';
 
-        return;
+        // return;
 
-        // *** [1] setting color and draw rectangle ***
-        ctx.fillStyle = 'lightblue';
-        ctx.fillRect(0,0, MATRIX_SIZE, MATRIX_SIZE);
+        // *** [1] draw simple noise ***
 
-        return;
+        // to fix view to pixeled uncomment this line
+        // don't comment this line to go further 
+        canvas.style.imageRendering = 'pixelated';
 
-        // *** [2] draw simple noise ***
-        // canvas.style.imageRendering = 'pixelated';
-
-        for(let x = 0; x < MATRIX_SIZE; x++){
-            for(let y = 0; y < MATRIX_SIZE; y++){
-                const value = Math.random();
-                const color = `rgba(0,0,0, ${value})`;
-                ctx.fillStyle = color;
-                ctx.fillRect(x,y, 1, 1);
+        // comment this block to go further
+        {
+            for(let x = 0; x < MATRIX_SIZE; x++){
+                for(let y = 0; y < MATRIX_SIZE; y++){
+                    const value = Math.random();
+                    const color = `rgba(0,0,0, ${value})`;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x,y, 1, 1);
+                }
             }
         }
 
+
+
         return;
 
 
-        // ** draw Perlin noise **
+        // ** [2] draw Perlin noise **
         // https://p5js.org/reference/#/p5/noise
-    
-        const p5Lib = new p5();
-        p5Lib.remove();
 
-        // const zoom = 50;
-        // const zoom = 150; // set this on [3]
-        
-        // const SEED = 10000;
-        // p5Lib.noiseSeed(SEED);
+        {
+            const p5Lib = new p5();
+            p5Lib.remove();
 
-        for(let x = 0; x < MATRIX_SIZE; x++){
-            for(let y = 0; y < MATRIX_SIZE; y++){
-                const value = p5Lib.noise(x, y);
-                // const value = p5Lib.noise(x / zoom, y / zoom);
+            // ** [2.1] **
+            // const zoom = 30;
 
-                const color = `rgba(0,0,0, ${value})`;
-                ctx.fillStyle = color;
-                ctx.fillRect(x,y, 1, 1);
+            // ** [3.2] **
+            // const zoom = 150; // set this on [3]
+            
+            // ** [2.2] **
+            // const SEED = 200;
+            // p5Lib.noiseSeed(SEED);
 
-                // ctx.fillStyle = 'black';
-                // if(value > 0.5){
-                //     ctx.fillRect(x,y, 1, 1);
-                // }
-            }
+            for(let x = 0; x < MATRIX_SIZE; x++){
+                for(let y = 0; y < MATRIX_SIZE; y++){
+
+                    // step 1
+                    // draw Perlin noise by x and y cords
+                    // comment this block to go further
+                    {
+                        const value = p5Lib.noise(x, y);
+                        const color = `rgba(0,0,0, ${value})`;
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x,y, 1, 1);
+                    }
+
+                    // step 2 
+                    // fix noise size (uncomment ** [2.1] **)
+
+                    // then uncomment ** [2.2] ** to set Perlin noize seed
+                    // (now after reload page noise will be the same)
+                    // and try to increase zoom to 15, 20, 30, 40, 50
+
+                    // comment this block to go further
+                    // {
+                    //     const value = p5Lib.noise(x / zoom, y / zoom);
+
+                    //     const color = `rgba(0,0,0, ${value})`;
+                    //     ctx.fillStyle = color;
+                    //     ctx.fillRect(x,y, 1, 1);
+                    // }
+
+
+                    // to make a clear picture of the map, draw pixel only if 
+                    // Perlin noise value is greater than 0.5
+
+                    // don't comment this to go further
+                    // {
+                    //     ctx.fillStyle = 'black';
+                    //     const value = p5Lib.noise(x / zoom, y / zoom);
+
+                    //     if(value > 0.5){
+                    //         ctx.fillRect(x,y, 1, 1);
+                    //     }
+                    // }
+ 
+                }
+            }   
         }
+
 
         return;
 
-
+        // load images
         const images = ['breath', 'decor', 'grass', 'ground'];
         const atlas = {};
         const path = '../assets/';
@@ -93,31 +137,28 @@
         await Promise.all(images.map(loadImage));
 
         // *** [3] fill canvas by Map image ***
+        // uncomment **[3.1]**, ** [3.2] **
+        
+        // ** [4.1] **
         // const preMatrix = getMatrixFromCtx(ctx) // set this on [4]
 
-        const mapImage = atlas['ground'];
-        const width = mapImage.naturalWidth;
-        const height = mapImage.naturalHeight;
-        for(let x = 0; x < MATRIX_SIZE; x += width){
-            for(let y = 0; y < MATRIX_SIZE; y += height){
-                ctx.drawImage(mapImage, x, y);
+        {
+            const mapImage = atlas['ground'];
+            const width = mapImage.naturalWidth;
+            const height = mapImage.naturalHeight;
+            for(let x = 0; x < MATRIX_SIZE; x += width){
+                for(let y = 0; y < MATRIX_SIZE; y += height){
+                    ctx.drawImage(mapImage, x, y);
+                }
             }
         }
 
         return;
 
-        {
-            // draw in console
-
-            // MATRIX_SIZE = 32;
-            // zoom = 20;
-            // alphaData.push(value === 255 ? '◼' : '◻');
-            // console.log(preMatrix);
-
-        }
-
 
         // *** [4] crop image by mask ***
+        // uncomment  ** [4.1] ** to save Perlin noize to matrix
+
         function getMatrixFromCtx(ctx){
             imageData = ctx.getImageData(0, 0, MATRIX_SIZE, MATRIX_SIZE);
             const alphaData = [];
@@ -134,7 +175,6 @@
 
             return matrix;
         };
-
 
         for(let y = 0; y < MATRIX_SIZE; y++){
             for(let x = 0; x < MATRIX_SIZE; x++){
@@ -157,14 +197,10 @@
                 const value = preMatrix[y][x];
 
                 if(value === 1 && above === 0){
-
-                    ctx.drawImage(grassImage, x, y); 
-
-
-                    // const size = grassImage.naturalWidth;
-                    // const xShifted  = x - size / 2;
-                    // const yShifted = y - size / 2;
-                    // ctx.drawImage(grassImage, xShifted, yShifted); 
+                    const size = grassImage.naturalWidth;
+                    const xShifted  = x - size / 2;
+                    const yShifted = y - size / 2;
+                    ctx.drawImage(grassImage, xShifted, yShifted); 
                 }
             }
         }
@@ -173,30 +209,6 @@
 
 
         // *** [6] draw objects ***
-        const xRand = Math.random() * MATRIX_SIZE;
-
-        {
-            // draw line
-            ctx.beginPath();
-
-            ctx.save();
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-
-            ctx.moveTo(xRand, 0);
-            ctx.lineTo(xRand, MATRIX_SIZE);
-
-            // ctx.lineTo(0, 0);
-            // ctx.lineTo(xRand, 0);
-            // ctx.fillStyle = 'orange';
-            // ctx.fill();
-
-            // ctx.stroke();
-            ctx.restore();
-        }
-
-        return;
-
         class Random{
             m = 4294967296;
             a = 1664525;
@@ -212,66 +224,34 @@
             }
         }
 
+        const SEED = 25;
         const random = new Random(SEED)
-        const xRand_LCM = Math.floor(random.get() * MATRIX_SIZE);
+        const xRand = Math.floor(random.get() * MATRIX_SIZE);
 
-        // draw line
-        {
-            
-            ctx.beginPath();
-
-            ctx.save();
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-
-            ctx.moveTo(xRand_LCM, 0);
-            ctx.lineTo(xRand_LCM, MATRIX_SIZE);
-
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        return;
         const yPlaces = [];
+
         for(let y = 1; y < MATRIX_SIZE; y++){
 
-            const above = preMatrix[y-1][xRand_LCM];
-            const value = preMatrix[y][xRand_LCM];
+            const above = preMatrix[y-1][xRand];
+            const value = preMatrix[y][xRand];
 
             if(value === 1 && above === 0){
                 yPlaces.push(y);
             }
         }
 
-        const drawCircle = (x,y, radius) => {
-            ctx.save();
-            ctx.fillStyle = 'orange';
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2 );
-            ctx.fill();
-            ctx.restore();
-        }
 
-        yPlaces.forEach(y => {
-            drawCircle(xRand_LCM, y, 10 );
-        });
-
-        return;
         const { decor } = atlas;
         const { naturalWidth, naturalHeight } = decor;
-        const x = xRand_LCM - naturalWidth / 2; 
+        const x = xRand - naturalWidth / 2; 
         const y = yPlaces.at(-1) - naturalHeight;
-
-        ctx.drawImage(decor, x, y);
-
-        return;
 
         const url = canvas.toDataURL();
         const mapImageRendered = new Image();
-        mapImage.src = url;
-        mapImage.onload = () => {
+        mapImageRendered.src = url;
+        mapImageRendered.onload = () => {
             ctx.drawImage(decor, x, y);
-            ctx.drawImage(mapImage, 0, 0);
+            ctx.drawImage(mapImageRendered, 0, 0);
         }
 
     })()
